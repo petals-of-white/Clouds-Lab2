@@ -1,0 +1,472 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: you@your-company.com
+  description: Books Management API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Books Management API
+  version: 1.0.0
+servers:
+- description: SwaggerHub API Auto Mocking
+  url: https://virtserver.swaggerhub.com/MAKSYMSYVASH_1/BooksManager/1.0.0
+tags:
+- description: Secured Admin-only calls
+  name: admins
+- description: Operations available to regular developers
+  name: developers
+paths:
+  /authors:
+    get:
+      operationId: get_authors
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Author'
+                type: array
+          description: OK
+      summary: List authors
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      operationId: post_authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/post_authors_request'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: Created
+      summary: Add author
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /authors/{authorId}:
+    get:
+      operationId: get_authors_author_id
+      parameters:
+      - explode: false
+        in: path
+        name: authorId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: OK
+        "404":
+          description: Author Not Found
+      summary: get author by id
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /books:
+    get:
+      operationId: get_books
+      parameters:
+      - explode: true
+        in: query
+        name: author
+        required: false
+        schema:
+          type: string
+        style: form
+      - allowEmptyValue: false
+        explode: true
+        in: query
+        name: genres
+        required: false
+        schema:
+          items:
+            format: uuid
+            type: string
+          type: array
+          uniqueItems: true
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Book'
+                type: array
+          description: OK
+      summary: List books
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      operationId: create_book
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_book_request'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+          description: Book reated
+      summary: Create a book
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /books/{bookId}:
+    get:
+      operationId: get_book_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+          description: OK
+        "404":
+          description: Book not found
+      summary: Book by id
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /genres:
+    get:
+      operationId: get_genres
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Genre'
+                type: array
+          description: OK
+      summary: List genres
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      operationId: create_genre
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+          description: New genre created
+      summary: add new genre
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /users:
+    post:
+      operationId: create_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_user_request'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: User created
+      summary: Create user
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /users/{userId}:
+    get:
+      operationId: get_user_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: user found
+        "404":
+          description: User Not Found
+      summary: get user by userid
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /users/{userId}/books:
+    get:
+      operationId: get_users_books
+      parameters:
+      - explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/get_users_books_200_response_inner'
+                type: array
+          description: OK
+        "404":
+          description: User not found
+      summary: user's books
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      operationId: set_user_read_pages
+      parameters:
+      - explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/set_user_read_pages_request'
+      responses:
+        "200":
+          description: OK
+      summary: Set read pages for a book
+      tags: []
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  responses: {}
+  schemas:
+    Book:
+      example:
+        numberOfPages: 0
+        genres:
+        - name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        author:
+          FirstName: FirstName
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          LastName: LastName
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+      properties:
+        id:
+          format: uuid
+          title: id
+          type: string
+        title:
+          title: title
+          type: string
+          x-stoplight:
+            id: hwzvuhlba3qhn
+        numberOfPages:
+          title: numberOfPages
+          type: integer
+          x-stoplight:
+            id: ayuyzrimd4amn
+        genres:
+          items:
+            $ref: '#/components/schemas/Genre'
+          title: genres
+          type: array
+          x-stoplight:
+            id: mtpgvo0f56yzy
+        author:
+          $ref: '#/components/schemas/Author'
+      title: Book
+      type: object
+      x-internal: false
+    User:
+      example:
+        firstName: firstName
+        lastName: lastName
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          title: id
+          type: string
+        firstName:
+          title: firstName
+          type: string
+          x-stoplight:
+            id: bw7nl838t3m7l
+        lastName:
+          title: lastName
+          type: string
+          x-stoplight:
+            id: fkozxj23et3kg
+      title: User
+      type: object
+    Genre:
+      example:
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          title: id
+          type: string
+        name:
+          title: name
+          type: string
+          x-stoplight:
+            id: xwodhrhpk2hs3
+      title: Genre
+      type: object
+    Author:
+      example:
+        FirstName: FirstName
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        LastName: LastName
+      properties:
+        id:
+          format: uuid
+          title: id
+          type: string
+        FirstName:
+          title: FirstName
+          type: string
+          x-stoplight:
+            id: qprhufey3sxar
+        LastName:
+          title: LastName
+          type: string
+          x-stoplight:
+            id: qet0yue93h7t2
+      title: Author
+      type: object
+    create_user_request:
+      properties:
+        FirstName:
+          title: FirstName
+          type: string
+          x-stoplight:
+            id: up4oeyj8am00v
+        LastName:
+          title: LastName
+          type: string
+          x-stoplight:
+            id: p7vpkkcax9vij
+      title: create_user_request
+      type: object
+    get_users_books_200_response_inner:
+      example:
+        pagesRead: 0
+        book:
+          numberOfPages: 0
+          genres:
+          - name: name
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - name: name
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          author:
+            FirstName: FirstName
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            LastName: LastName
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          title: title
+      properties:
+        book:
+          $ref: '#/components/schemas/Book'
+        pagesRead:
+          title: pagesRead
+          type: integer
+      title: get_users_books_200_response_inner
+      type: object
+    set_user_read_pages_request:
+      properties:
+        bookId:
+          format: uuid
+          title: bookId
+          type: string
+          x-stoplight:
+            id: dufl4vyocb73m
+        pagesRead:
+          title: pagesRead
+          type: integer
+          x-stoplight:
+            id: sboit2sfj5irk
+      title: set_user_read_pages_request
+      type: object
+    create_book_request:
+      properties:
+        title:
+          title: title
+          type: string
+          x-stoplight:
+            id: c8e990i32eumh
+        author:
+          format: uuid
+          title: author
+          type: string
+          x-stoplight:
+            id: qq0zwaz1t3uj0
+        genres:
+          items:
+            format: uuid
+            type: string
+            x-stoplight:
+              id: kaxtlvyb095q9
+          title: genres
+          type: array
+          x-stoplight:
+            id: p8rm9xigzg6n8
+        numberOfPages:
+          title: numberOfPages
+          type: integer
+          x-stoplight:
+            id: l497w4the4dx9
+      title: create_book_request
+      type: object
+    post_authors_request:
+      properties:
+        FirstName:
+          title: FirstName
+          type: string
+          x-stoplight:
+            id: 6ipgfugb85uxm
+        LastName:
+          title: LastName
+          type: string
+          x-stoplight:
+            id: ajnig1wumb2xi
+      title: post_authors_request
+      type: object
