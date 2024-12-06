@@ -44,8 +44,9 @@ def create_book(create_book_request=None):  # noqa: E501
                     author=findAuthor(create_book_request.author),
                     number_of_pages=create_book_request.number_of_pages,
                     genres=[findGenre(genreId) for genreId in create_book_request.genres])
-    
-    db.books.append(new_book)
+    with db.db_lock:
+        db.books.append(new_book)
+
     # noqa: E501
     return new_book, 201
 
@@ -61,7 +62,8 @@ def create_genre(body=None):  # noqa: E501
     :rtype: Union[Genre, Tuple[Genre, int], Tuple[Genre, int, Dict[str, str]]
     """
     new_genre = Genre(str(uuid4()), body)
-    db.genres.append(new_genre)
+    with db.db_lock:
+        db.genres.append(new_genre)
     return new_genre, 201
 
 
@@ -83,7 +85,9 @@ def create_user(create_user_request=None):  # noqa: E501
 
     new_user = User(str(uuid4()), create_user_request.first_name,
                     create_user_request.last_name)
-    db.users.append(new_user)
+    with db.db_lock:
+        db.users.append(new_user)
+    
     return new_user, 201
 
 
@@ -95,7 +99,8 @@ def get_authors():  # noqa: E501
 
     :rtype: Union[List[Author], Tuple[List[Author], int], Tuple[List[Author], int, Dict[str, str]]
     """
-    return db.authors
+    with db.db_lock:
+        return db.authors
 
 
 def get_authors_author_id(author_id):  # noqa: E501
@@ -108,13 +113,14 @@ def get_authors_author_id(author_id):  # noqa: E501
 
     :rtype: Union[Author, Tuple[Author, int], Tuple[Author, int, Dict[str, str]]
     """
-    author = next((x for x in db.authors if x.id == author_id), None)
-    if author is not None:
-        response = make_response(author)
-        response.status_code = 200
-        return response
-    else:
-        return connexion.problem(404, 'Author not found', 'Author not found')
+    with db.db_lock:
+        author = next((x for x in db.authors if x.id == author_id), None)
+        if author is not None:
+            response = make_response(author)
+            response.status_code = 200
+            return response
+        else:
+            return connexion.problem(404, 'Author not found', 'Author not found')
 
 
 def get_book_by_id(book_id):  # noqa: E501
@@ -127,13 +133,14 @@ def get_book_by_id(book_id):  # noqa: E501
 
     :rtype: Union[Book, Tuple[Book, int], Tuple[Book, int, Dict[str, str]]
     """
-    book = next((x for x in db.books if x.id == book_id), None)
-    if book is not None:
-        response = make_response(book)
-        response.status_code = 200
-        return response
-    else:
-        return connexion.problem(404, 'Book not found', 'Book not found')
+    with db.db_lock:
+        book = next((x for x in db.books if x.id == book_id), None)
+        if book is not None:
+            response = make_response(book)
+            response.status_code = 200
+            return response
+        else:
+            return connexion.problem(404, 'Book not found', 'Book not found')
 
 
 def get_books(author=None, genres=None):  # noqa: E501
@@ -163,10 +170,11 @@ def get_books(author=None, genres=None):  # noqa: E501
         else:
             return b.author.id in genres
 
-    books = [book for book in db.books if checkAuthor(
-        book) and checkGenres(book)]
+    with db.db_lock:
+        books = [book for book in db.books if checkAuthor(
+            book) and checkGenres(book)]
 
-    return books
+        return books
 
 
 def get_genres():  # noqa: E501
@@ -177,7 +185,8 @@ def get_genres():  # noqa: E501
 
     :rtype: Union[List[Genre], Tuple[List[Genre], int], Tuple[List[Genre], int, Dict[str, str]]
     """
-    return db.genres
+    with db.db_lock:
+        return db.genres
 
 
 def get_user_by_id(user_id):  # noqa: E501
@@ -192,12 +201,13 @@ def get_user_by_id(user_id):  # noqa: E501
     :rtype: Union[User, Tuple[User, int], Tuple[User, int, Dict[str, str]]
     """
 
-    user = next((user for user in db.users if user.id == user_id), None)
+    with db.db_lock:
+        user = next((user for user in db.users if user.id == user_id), None)
 
-    if user is None:
-        return connexion.problem(404, 'User not found', 'User not found')
-    else:
-        return user
+        if user is None:
+            return connexion.problem(404, 'User not found', 'User not found')
+        else:
+            return user
 
 
 def findBook(bookId) -> Book: return next((
@@ -223,12 +233,12 @@ def get_users_books(user_id):  # noqa: E501
     """
 
     
-
-    userbooks = [   GetUsersBooks200ResponseInner(findBook(bookId), pagesRead)
-                     for (user, bookId, pagesRead) in db.userBooks
-                     if user == user_id]
-    
-    return userbooks
+    with db.db_lock:
+        userbooks = [   GetUsersBooks200ResponseInner(findBook(bookId), pagesRead)
+                        for (user, bookId, pagesRead) in db.userBooks
+                        if user == user_id]
+        
+        return userbooks
 
 
 def post_authors(post_authors_request=None):  # noqa: E501
@@ -244,9 +254,11 @@ def post_authors(post_authors_request=None):  # noqa: E501
     if connexion.request.is_json:
         post_authors_request = PostAuthorsRequest.from_dict(
             connexion.request.get_json())
+    
 
     author = Author(str(uuid4()), post_authors_request.first_name, post_authors_request.last_name)  # noqa: E501
-    db.authors.append(author)
+    with db.db_lock:
+        db.authors.append(author)
 
     return author, 201
 
@@ -267,13 +279,14 @@ def set_user_read_pages(user_id, set_user_read_pages_request=None):  # noqa: E50
     if connexion.request.is_json:
         set_user_read_pages_request = SetUserReadPagesRequest.from_dict(connexion.request.get_json())  # noqa: E501
 
-    newList = [(userId, bookId, pages) for (userId, bookId, pages) in db.userBooks if userId !=
-               user_id and bookId != set_user_read_pages_request.book_id]
-    
-    
-    newList.append((user_id, set_user_read_pages_request.book_id,
-                   set_user_read_pages_request.pages_read))
+    with db.db_lock:
+        newList = [(userId, bookId, pages) for (userId, bookId, pages) in db.userBooks if userId !=
+                user_id and bookId != set_user_read_pages_request.book_id]
+        
+        
+        newList.append((user_id, set_user_read_pages_request.book_id,
+                    set_user_read_pages_request.pages_read))
 
-    db.userBooks = newList
+        db.userBooks = newList
 
     return None, 200
